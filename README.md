@@ -60,17 +60,3 @@ Aplikacja została zbudowana zgodnie z zaleceniami Google, wykorzystując wzorze
 ```
 
 ---
-
-## 🚀 Uruchomienie lokalnie
-
-Aby skompilować i uruchomić projekt we własnym środowisku:
-
-1. Sklonuj repozytorium:
-   ```bash
-   git clone https://github.com/TwojGithub/APODlog.git
-   ```
-2. Otwórz projekt w **Android Studio**.
-3. Poczekaj na zsynchronizowanie projektu przez Gradle.
-4. Uruchom aplikację na emulatorze lub fizycznym urządzeniu z systemem Android.
-
-> **Uwaga dot. API Key:** Projekt korzysta domyślnie z klucza `DEMO_KEY` dla API NASA. W przypadku osiągnięcia limitów zapytań (rate limits), wygeneruj własny darmowy klucz na stronie [api.nasa.gov](https://api.nasa.gov/) i podmień go w pliku `ApodApiService.kt`.
