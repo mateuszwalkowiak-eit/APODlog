@@ -6,6 +6,12 @@ Aplikacja została zaprojektowana z myślą o nowoczesnym UI (Jetpack Compose), 
 
 ---
 
+## 🎬 Demo aplikacji
+
+`[Prezentacja działania aplikacji](https://drive.google.com/file/d/1-5WdALv-qXnem5iOQ2cezL-sw_03yHf6/view?usp=sharing)`
+
+---
+
 ## 🌟 Funkcje (Obecne - Etap 1)
 - **Codzienne zdjęcia kosmosu**: Pobieranie i wyświetlanie najnowszego obrazu/filmu udostępnionego przez NASA.
 - **Wsparcie dla trybu Offline**: Aplikacja zapisuje pobrane dane w lokalnej bazie, dzięki czemu ostatnio pobrane zdjęcia można przeglądać bez dostępu do Internetu.
