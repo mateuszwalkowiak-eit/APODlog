@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+/logs.txt
+/logs_large.txt
+/.idea/
