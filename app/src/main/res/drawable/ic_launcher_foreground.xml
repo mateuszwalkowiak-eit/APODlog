@@ -1,0 +1,59 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Teleskop na statywie – sylwetka w białym kolorze -->
+    <!-- Tuba teleskopu (główna, pochylona) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M38,32 L72,52 L70,56 L36,36 Z" />
+
+    <!-- Obiektyw (przód teleskopu) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M72,48 A6,6 0,0,1 72,60 L70,56 L72,52 Z" />
+
+    <!-- Okular (tył teleskopu) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M34,32 L38,30 L40,36 L36,38 Z" />
+
+    <!-- Noga statywu – lewa -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M52,46 L38,78" />
+
+    <!-- Noga statywu – prawa -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M52,46 L66,78" />
+
+    <!-- Noga statywu – środkowa (podpora) -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M52,46 L52,76" />
+
+    <!-- Gwiazdka 1 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M80,30 L81,33 L84,34 L81,35 L80,38 L79,35 L76,34 L79,33 Z" />
+
+    <!-- Gwiazdka 2 (mała) -->
+    <path
+        android:fillColor="#AAFFFFFF"
+        android:pathData="M88,44 L88.5,46 L90.5,46.5 L88.5,47 L88,49 L87.5,47 L85.5,46.5 L87.5,46 Z" />
+
+    <!-- Gwiazdka 3 (mała) -->
+    <path
+        android:fillColor="#AAFFFFFF"
+        android:pathData="M30,24 L30.5,26 L32.5,26.5 L30.5,27 L30,29 L29.5,27 L27.5,26.5 L29.5,26 Z" />
+
+</vector>
