@@ -1,10 +1,10 @@
 package com.example.apodlog.ui.favorites
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,80 +15,51 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.apodlog.R
 import com.example.apodlog.data.model.ApodEntry
+import com.example.apodlog.ui.components.AppTopBar
 
 /**
  * Ekran Ulubionych – wyświetla listę zdjęć dodanych do ulubionych.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FavoritesScreen(
     viewModel: FavoritesViewModel = viewModel()
 ) {
-    // Obserwujemy listę ulubionych – gdy coś się zmieni w bazie, ekran odświeży się automatycznie
     val favorites by viewModel.favorites.collectAsState()
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        // To samo logo co na ekranie głównym
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFF0D1B2A)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                                contentDescription = "Logo APODlog",
-                                modifier = Modifier.size(28.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.size(10.dp))
-                        Text(
-                            text = "Ulubione",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
+            AppTopBar(title = "Ulubione")
         }
     ) { innerPadding ->
         Box(
@@ -97,12 +68,9 @@ fun FavoritesScreen(
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            // Sprawdzamy czy lista ulubionych jest pusta
             if (favorites.isEmpty()) {
-                // Ekran pustej listy
                 EmptyFavoritesContent()
             } else {
-                // Lista ulubionych zdjęć
                 FavoritesList(
                     favorites = favorites,
                     onRemoveFavorite = { entry ->
@@ -127,10 +95,7 @@ private fun EmptyFavoritesContent() {
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(32.dp)
         ) {
-            Text(
-                text = "🌌",
-                fontSize = 72.sp
-            )
+            Text(text = "🌌", fontSize = 72.sp)
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = "Brak ulubionych",
@@ -142,7 +107,7 @@ private fun EmptyFavoritesContent() {
                 text = "Dodaj zdjęcia do ulubionych klikając ❤ na ekranie głównym",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                textAlign = TextAlign.Center
             )
         }
     }
@@ -150,7 +115,6 @@ private fun EmptyFavoritesContent() {
 
 /**
  * Przewijalna lista ulubionych zdjęć.
- * Używamy LazyColumn – ładuje tylko elementy widoczne na ekranie (wydajne dla długich list).
  */
 @Composable
 private fun FavoritesList(
@@ -160,7 +124,7 @@ private fun FavoritesList(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+        contentPadding = PaddingValues(
             start = 16.dp,
             end = 16.dp,
             top = 8.dp,
@@ -169,7 +133,6 @@ private fun FavoritesList(
     ) {
         items(
             items = favorites,
-            // Klucz to data zdjęcia – pomaga Compose śledzić elementy przy zmianach listy
             key = { apod -> apod.date }
         ) { apod ->
             FavoriteItem(
@@ -182,12 +145,63 @@ private fun FavoritesList(
 
 /**
  * Pojedyncza karta ulubionego zdjęcia na liście.
+ * Po kliknięciu serca pokazuje dialog z pytaniem o potwierdzenie.
  */
 @Composable
 private fun FavoriteItem(
     apod: ApodEntry,
     onRemoveFavorite: () -> Unit
 ) {
+    // Zmienna przechowująca czy dialog jest aktualnie widoczny.
+    // 'remember' – Compose pamięta tę wartość między rysowaniami.
+    // 'mutableStateOf(false)' – na start dialog jest ukryty.
+    var showDialog by remember { mutableStateOf(false) }
+
+    // Dialog potwierdzenia – widoczny tylko gdy showDialog == true
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                // Użytkownik kliknął poza dialogiem lub wcisnął "wstecz" – chowamy dialog
+                showDialog = false
+            },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Favorite,
+                    contentDescription = null,
+                    tint = Color(0xFFE53935)
+                )
+            },
+            title = {
+                Text(text = "Usuń z ulubionych")
+            },
+            text = {
+                Text(text = "Czy na pewno chcesz usunąć \"${apod.title}\" z ulubionych?")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDialog = false  // zamknij dialog
+                        onRemoveFavorite() // wykonaj usunięcie
+                    }
+                ) {
+                    Text(
+                        text = "Usuń",
+                        color = Color(0xFFE53935),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDialog = false }
+                ) {
+                    Text(text = "Anuluj")
+                }
+            }
+        )
+    }
+
+    // Karta zdjęcia
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -244,7 +258,6 @@ private fun FavoriteItem(
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold
                 )
-                // Jeśli jest copyright, pokaż go
                 apod.copyright?.let {
                     Text(
                         text = "© $it",
@@ -256,8 +269,8 @@ private fun FavoriteItem(
                 }
             }
 
-            // Przycisk usunięcia z ulubionych
-            IconButton(onClick = onRemoveFavorite) {
+            // Kliknięcie serca → otwiera dialog zamiast od razu usuwać
+            IconButton(onClick = { showDialog = true }) {
                 Icon(
                     imageVector = Icons.Default.Favorite,
                     contentDescription = "Usuń z ulubionych",
