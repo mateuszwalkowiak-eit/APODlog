@@ -13,64 +13,65 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * Możliwe stany dla ekranu szczegółów.
- * Ułatwia wyświetlanie kręciołka ładowania, danych lub błędu.
+ * Stan ekranu szczegółów (Details UI State).
  */
 sealed class DetailsUiState {
-    object Loading : DetailsUiState()
+    data object Loading : DetailsUiState()
     data class Success(val apod: ApodEntry) : DetailsUiState()
     data class Error(val message: String) : DetailsUiState()
 }
 
 /**
- * Prosty ViewModel do zarządzania danymi na ekranie szczegółów.
+ * ViewModel dla ekranu szczegółów APOD.
+ * Pobiera dane wybranego dnia z bazy lub sieci oraz umożliwia edycję notatek.
  */
 class DetailsViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: ApodRepository
 
-    // Trzymamy aktualny stan ekranu (domyślnie: ładowanie)
     private val _uiState = MutableStateFlow<DetailsUiState>(DetailsUiState.Loading)
     val uiState: StateFlow<DetailsUiState> = _uiState.asStateFlow()
 
     init {
-        // Przygotowujemy bazę danych i API, tworząc repozytorium
         val dao = AppDatabase.getInstance(application).apodDao()
         val api = RetrofitInstance.api
         repository = ApodRepository(dao, api)
     }
 
     /**
-     * Pobiera szczegóły APOD dla podanej daty.
+     * Pobiera dane dla podanej daty.
      */
     fun loadApod(date: String) {
         viewModelScope.launch {
             _uiState.value = DetailsUiState.Loading
-            
-            // Pobieramy dane z repozytorium
             val result = repository.fetchApodByDate(date)
-            
-            // Zapisujemy wynik do stanu UI
             _uiState.value = result.fold(
                 onSuccess = { DetailsUiState.Success(it) },
-                onFailure = { DetailsUiState.Error(it.message ?: "Nieznany błąd połączenia") }
+                onFailure = { DetailsUiState.Error(it.message ?: "Nie udało się załadować danych") }
             )
         }
     }
 
     /**
-     * Dodaje lub usuwa dany wpis z ulubionych.
+     * Zapisuje notatkę użytkownika w bazie danych Room.
+     */
+    fun saveNote(entry: ApodEntry, note: String, onSaved: () -> Unit = {}) {
+        viewModelScope.launch {
+            repository.updateNote(entry, note)
+            // Aktualizujemy stan UI lokalnie nowym wpisem z zapisaną notatką
+            _uiState.value = DetailsUiState.Success(entry.copy(userNote = note))
+            onSaved()
+        }
+    }
+
+    /**
+     * Przełącza stan polubienia (❤️) bezpośrednio z ekranu szczegółów.
      */
     fun toggleFavorite(entry: ApodEntry) {
         viewModelScope.launch {
-            // Przełączamy ulubione w bazie danych
             repository.toggleFavorite(entry)
-            
-            // Odświeżamy stan ekranu z nowymi danymi
-            val result = repository.fetchApodByDate(entry.date)
-            result.onSuccess { updatedEntry ->
-                _uiState.value = DetailsUiState.Success(updatedEntry)
-            }
+            // Zmieniamy stan na przeciwny lokalnie w UI state
+            _uiState.value = DetailsUiState.Success(entry.copy(isFavorite = !entry.isFavorite))
         }
     }
 }

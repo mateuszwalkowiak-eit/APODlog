@@ -76,6 +76,13 @@ class ApodRepository(
     }
 
     /**
+     * Aktualizuje notatkę użytkownika dla danego wpisu i zapisuje w bazie.
+     */
+    suspend fun updateNote(entry: ApodEntry, note: String) {
+        dao.update(entry.copy(userNote = note))
+    }
+
+    /**
      * Zwraca Flow z listą ulubionych – automatycznie reaguje na zmiany w DB.
      */
     fun getFavorites(): Flow<List<ApodEntry>> = dao.getFavorites()

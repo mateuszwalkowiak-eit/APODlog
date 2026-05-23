@@ -1,5 +1,6 @@
 package com.example.apodlog.ui.details
 
+import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -19,6 +20,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Refresh
@@ -29,12 +31,16 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,8 +48,10 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -52,9 +60,11 @@ import com.example.apodlog.data.model.ApodEntry
 import com.example.apodlog.ui.components.AppTopBar
 
 /**
- * Ekran szczegółów (DetailsScreen).
- * Wyświetla pełne dane o wybranym APOD (zdjęcie, tytuł, opis).
- * Wygląd tego ekranu jest identyczny z ekranem głównym.
+ * Ekran szczegółów zdjęcia APOD.
+ * Pozwala na:
+ * - Przeglądanie zdjęcia/filmu w pełnym rozmiarze
+ * - Odczytywanie i pisanie notatek (wyświetlanych między nagłówkiem a opisem)
+ * - Dodawanie/usuwanie z ulubionych
  */
 @Composable
 fun DetailsScreen(
@@ -62,17 +72,16 @@ fun DetailsScreen(
     onBackClick: () -> Unit,
     viewModel: DetailsViewModel = viewModel()
 ) {
-    // Kiedy ekran się pojawia, pobieramy dane z internetu lub bazy dla tej daty
+    val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    // Wczytaj szczegóły po zmianie daty
     LaunchedEffect(date) {
         viewModel.loadApod(date)
     }
 
-    // Obserwujemy stan z ViewModelu
-    val uiState by viewModel.uiState.collectAsState()
-
     Scaffold(
         topBar = {
-            // Używamy naszego AppTopBar z włączonym przyciskiem wstecz
             AppTopBar(
                 title = "Szczegóły",
                 onBackClick = onBackClick
@@ -85,63 +94,32 @@ fun DetailsScreen(
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            // Decydujemy co wyświetlić w zależności od aktualnego stanu
             when (val state = uiState) {
                 is DetailsUiState.Loading -> {
-                    // Widok ładowania (kręciołek)
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(56.dp),
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Ładowanie zdjęcia kosmosu...",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
                 is DetailsUiState.Error -> {
-                    // Widok błędu
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(32.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(text = "🌑", fontSize = 64.sp)
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "Błąd połączenia",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = state.message,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(24.dp))
-                        Button(onClick = { viewModel.loadApod(date) }) {
-                            Icon(Icons.Default.Refresh, contentDescription = null)
-                            Spacer(modifier = Modifier.size(8.dp))
-                            Text("Spróbuj ponownie")
-                        }
-                    }
+                    ErrorContent(
+                        message = state.message,
+                        onRetry = { viewModel.loadApod(date) }
+                    )
                 }
                 is DetailsUiState.Success -> {
-                    // Widok sukcesu - wyświetlamy dane APOD (tak samo jak na głównym)
                     DetailsContent(
                         apod = state.apod,
-                        onToggleFavorite = { viewModel.toggleFavorite(state.apod) }
+                        onToggleFavorite = { viewModel.toggleFavorite(state.apod) },
+                        onSaveNote = { note ->
+                            viewModel.saveNote(state.apod, note) {
+                                Toast.makeText(context, "Zapisano notatkę! 📝", Toast.LENGTH_SHORT).show()
+                            }
+                        }
                     )
                 }
             }
@@ -149,25 +127,72 @@ fun DetailsScreen(
     }
 }
 
-/**
- * Główna zawartość ekranu szczegółów (przewijana kolumna).
- * Wygląd i układ są identyczne z HomeScreen.
- */
 @Composable
 private fun DetailsContent(
     apod: ApodEntry,
-    onToggleFavorite: () -> Unit
+    onToggleFavorite: () -> Unit,
+    onSaveNote: (String) -> Unit
 ) {
+    // Stan wpisanej notatki w polu tekstowym
+    var noteInput by remember { mutableStateOf("") }
+
+    // Gdy wczytamy dane z bazy, zaktualizuj wpisaną notatkę
+    LaunchedEffect(apod.userNote) {
+        noteInput = apod.userNote
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        // --- Zdjęcie ---
-        ApodImage(
-            url = if (apod.mediaType == "image") apod.url else null,
-            contentDescription = apod.title
-        )
+        // --- Zdjęcie / placeholder wideo ---
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(320.dp)
+        ) {
+            if (apod.mediaType == "image") {
+                AsyncImage(
+                    model = apod.url,
+                    contentDescription = apod.title,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(Color(0xFF0D1B2A), Color(0xFF1B2A4A))
+                            )
+                        )
+                        .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "🎬", fontSize = 80.sp)
+                }
+            }
+
+            // Subtelny gradient
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(80.dp)
+                    .align(Alignment.BottomCenter)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                MaterialTheme.colorScheme.background.copy(alpha = 0.8f)
+                            )
+                        )
+                    )
+            )
+        }
 
         // --- Karta z informacjami ---
         Card(
@@ -181,8 +206,7 @@ private fun DetailsContent(
             )
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
-
-                // Tytuł + przycisk ulubionych
+                // Tytuł i Serduszko
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -211,7 +235,7 @@ private fun DetailsContent(
                     fontWeight = FontWeight.SemiBold
                 )
 
-                // Copyright (jeśli istnieje)
+                // Copyright
                 apod.copyright?.let { copyright ->
                     Text(
                         text = "© $copyright",
@@ -221,7 +245,6 @@ private fun DetailsContent(
                     )
                 }
 
-                // Informacja dla filmów
                 if (apod.mediaType == "video") {
                     Spacer(modifier = Modifier.height(8.dp))
                     Card(
@@ -231,7 +254,7 @@ private fun DetailsContent(
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
-                            text = "📹 To APOD to film. Otwórz link: ${apod.url}",
+                            text = "📹 APOD to film. Otwórz link: ${apod.url}",
                             modifier = Modifier.padding(12.dp),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -239,87 +262,93 @@ private fun DetailsContent(
                     }
                 }
 
+                // -----------------------------------------------------------
+                // WYŚWIETLENIE NOTATKI (MIĘDZY TYTUŁEM A OPISEM)
+                // -----------------------------------------------------------
+                if (apod.userNote.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "Moja notatka 📝",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = apod.userNote,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Opis
+                // Wyjaśnienie/Opis
                 Text(
                     text = apod.explanation,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     lineHeight = 22.sp
                 )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // --- Sekcja edycji notatki ---
+                if (apod.isFavorite) {
+                    Text(
+                        text = "Edytuj notatkę ✍️",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedTextField(
+                        value = noteInput,
+                        onValueChange = { noteInput = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Wpisz tutaj swoje notatki kosmiczne...") },
+                        shape = RoundedCornerShape(12.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Button(
+                        onClick = { onSaveNote(noteInput) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null
+                        )
+                        Spacer(modifier = Modifier.size(8.dp))
+                        Text("Zapisz notatkę")
+                    }
+                }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
-/**
- * Nagłówek ze zdjęciem lub z placeholderem dla wideo.
- */
-@Composable
-private fun ApodImage(url: String?, contentDescription: String) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(300.dp)
-    ) {
-        if (url != null) {
-            AsyncImage(
-                model = url,
-                contentDescription = contentDescription,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)),
-                contentScale = ContentScale.Crop
-            )
-        } else {
-            // Placeholder dla filmów
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color(0xFF0D1B2A), Color(0xFF1B2A4A))
-                        )
-                    )
-                    .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "🎬", fontSize = 80.sp)
-            }
-        }
-
-        // Gradient overlay na dole zdjęcia
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(80.dp)
-                .align(Alignment.BottomCenter)
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            MaterialTheme.colorScheme.background.copy(alpha = 0.7f)
-                        )
-                    )
-                )
-        )
-    }
-}
-
-/**
- * Przycisk serduszka z animacjami.
- */
 @Composable
 private fun FavoriteButton(isFavorite: Boolean, onClick: () -> Unit) {
-    // Animacja koloru
     val iconColor by animateColorAsState(
         targetValue = if (isFavorite) Color(0xFFE53935) else MaterialTheme.colorScheme.onSurfaceVariant,
         label = "favoriteColor"
     )
-    // Animacja skali
     val scale by animateFloatAsState(
         targetValue = if (isFavorite) 1.2f else 1f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
@@ -336,5 +365,39 @@ private fun FavoriteButton(isFavorite: Boolean, onClick: () -> Unit) {
             tint = iconColor,
             modifier = Modifier.size(28.dp)
         )
+    }
+}
+
+@Composable
+private fun ErrorContent(message: String, onRetry: () -> Unit) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(32.dp)
+        ) {
+            Text(text = "🌑", fontSize = 64.sp)
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Coś poszło nie tak",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            Button(onClick = onRetry) {
+                Icon(Icons.Default.Refresh, contentDescription = null)
+                Spacer(modifier = Modifier.size(8.dp))
+                Text("Spróbuj ponownie")
+            }
+        }
     }
 }

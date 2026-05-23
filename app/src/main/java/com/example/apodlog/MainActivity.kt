@@ -7,9 +7,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.getValue
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.apodlog.ui.navigation.AppBottomNavigationBar
 import com.example.apodlog.ui.navigation.AppNavHost
+import com.example.apodlog.ui.navigation.Destinations
 import com.example.apodlog.ui.theme.APODlogTheme
 
 class MainActivity : ComponentActivity() {
@@ -24,9 +27,14 @@ class MainActivity : ComponentActivity() {
                 // Scaffold daje nam strukturę ekranu z miejscem na pasek nawigacji na dole
                 Scaffold(
                     bottomBar = {
-                        // Dolny pasek nawigacji dostaje navController
-                        // żeby wiedzieć który ekran jest aktualnie wybrany
-                        AppBottomNavigationBar(navController = navController)
+                        // Pobieramy aktualny wpis na stosie nawigacji
+                        val backStackEntry by navController.currentBackStackEntryAsState()
+                        val currentRoute = backStackEntry?.destination?.route
+
+                        // Dolny pasek nawigacji pokazujemy tylko na głównych ekranach (Home i Favorites)
+                        if (currentRoute == Destinations.HOME || currentRoute == Destinations.FAVORITES) {
+                            AppBottomNavigationBar(navController = navController)
+                        }
                     }
                 ) { innerPadding ->
                     // NavHost wyświetla odpowiedni ekran w zależności od trasy

@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -276,6 +277,18 @@ private fun FavoriteItem(
                         overflow = TextOverflow.Ellipsis
                     )
                 }
+            }
+
+            // Ikona notatki (wyświetlana tylko jeśli notatka nie jest pusta)
+            if (apod.userNote.isNotBlank()) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Ten wpis zawiera notatkę",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .padding(end = 8.dp)
+                        .size(20.dp)
+                )
             }
 
             // Kliknięcie serca → otwiera dialog zamiast od razu usuwać
