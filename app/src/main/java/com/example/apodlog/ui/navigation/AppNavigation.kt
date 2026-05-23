@@ -12,9 +12,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.navArgument
+import com.example.apodlog.ui.details.DetailsScreen
 import com.example.apodlog.ui.favorites.FavoritesScreen
 import com.example.apodlog.ui.home.HomeScreen
 
@@ -25,6 +28,14 @@ import com.example.apodlog.ui.home.HomeScreen
 object Destinations {
     const val HOME = "home"
     const val FAVORITES = "favorites"
+    
+    // Nowa trasa dla szczegółów. "{date}" to parametr, który będziemy przekazywać
+    const val DETAILS = "details/{date}"
+
+    // Prosta funkcja, która tworzy poprawny adres (np. "details/2026-05-23")
+    fun detailsRoute(date: String): String {
+        return "details/$date"
+    }
 }
 
 /**
@@ -129,7 +140,32 @@ fun AppNavHost(
 
         // Definicja ekranu ulubionych
         composable(route = Destinations.FAVORITES) {
-            FavoritesScreen()
+            FavoritesScreen(
+                onItemClick = { apod ->
+                    // Po kliknięciu na zdjęcie/kartę przechodzimy do szczegółów
+                    navController.navigate(Destinations.detailsRoute(apod.date))
+                }
+            )
+        }
+
+        // Definicja ekranu szczegółów (DetailsScreen)
+        composable(
+            route = Destinations.DETAILS,
+            arguments = listOf(
+                navArgument("date") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            // Wyciągamy przekazaną datę z argumentów nawigacji
+            val date = backStackEntry.arguments?.getString("date") ?: ""
+            DetailsScreen(
+                date = date,
+                onBackClick = {
+                    // Po kliknięciu "Wstecz" cofamy się na poprzedni ekran
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }

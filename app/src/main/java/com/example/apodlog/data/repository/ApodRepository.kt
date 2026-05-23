@@ -43,6 +43,32 @@ class ApodRepository(
     }
 
     /**
+     * Pobiera dane APOD dla wybranej daty.
+     * Najpierw szuka w bazie danych (cache). Jeśli nie ma, pobiera z API i zapisuje w bazie.
+     */
+    suspend fun fetchApodByDate(date: String): Result<ApodEntry> {
+        return try {
+            // 1. Sprawdzamy, czy mamy już ten dzień w bazie danych
+            val cached = dao.getByDate(date)
+            if (cached != null) {
+                return Result.success(cached)
+            }
+
+            // 2. Jeśli nie ma w bazie, pobieramy z internetu dla wybranej daty
+            val remote = api.getApod(date = date)
+            
+            // 3. Zapisujemy w lokalnej bazie danych, żeby następnym razem było szybciej
+            dao.insert(remote)
+            
+            // 4. Zwracamy pobrany wpis
+            Result.success(remote)
+        } catch (e: Exception) {
+            // Jeśli coś pójdzie nie tak (np. brak internetu), zwracamy błąd
+            Result.failure(e)
+        }
+    }
+
+    /**
      * Przełącza stan "ulubiony" dla danego wpisu i zapisuje w bazie.
      */
     suspend fun toggleFavorite(entry: ApodEntry) {

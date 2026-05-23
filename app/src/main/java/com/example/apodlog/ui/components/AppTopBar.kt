@@ -9,6 +9,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -25,14 +29,13 @@ import com.example.apodlog.R
 
 /**
  * Kompaktowy pasek tytułowy aplikacji.
- * statusBarsPadding() dodaje padding WEWNĄTRZ Row (nie tworzy osobnego pustego miejsca),
- * dzięki czemu ikona i tekst siedzą tuż pod paskiem statusu.
+ * Obsługuje opcjonalny przycisk wstecz.
  */
 @Composable
-fun AppTopBar(title: String) {
-    // Kolor tła taki sam jak reszta aplikacji – pasek statusu (czas, bateria)
-    // jest przezroczysty dzięki enableEdgeToEdge() w MainActivity,
-    // więc "wtapia się" w to samo tło.
+fun AppTopBar(
+    title: String,
+    onBackClick: (() -> Unit)? = null
+) {
     Surface(
         color = MaterialTheme.colorScheme.background,
         modifier = Modifier.fillMaxWidth()
@@ -43,18 +46,30 @@ fun AppTopBar(title: String) {
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFF0D1B2A)),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                    contentDescription = "Logo APODlog",
-                    modifier = Modifier.size(38.dp)
-                )
+            // Jeśli podano akcję powrotu, pokazujemy strzałkę wstecz
+            if (onBackClick != null) {
+                IconButton(onClick = onBackClick) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Cofnij",
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+            } else {
+                // Jeśli nie, pokazujemy logo aplikacji
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF0D1B2A)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                        contentDescription = "Logo APODlog",
+                        modifier = Modifier.size(38.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.size(12.dp))
@@ -68,3 +83,4 @@ fun AppTopBar(title: String) {
         }
     }
 }
+

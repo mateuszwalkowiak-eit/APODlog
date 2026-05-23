@@ -1,6 +1,7 @@
 package com.example.apodlog.ui.favorites
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -53,7 +54,8 @@ import com.example.apodlog.ui.components.AppTopBar
  */
 @Composable
 fun FavoritesScreen(
-    viewModel: FavoritesViewModel = viewModel()
+    viewModel: FavoritesViewModel = viewModel(),
+    onItemClick: (ApodEntry) -> Unit
 ) {
     val favorites by viewModel.favorites.collectAsState()
 
@@ -75,7 +77,8 @@ fun FavoritesScreen(
                     favorites = favorites,
                     onRemoveFavorite = { entry ->
                         viewModel.removeFromFavorites(entry)
-                    }
+                    },
+                    onItemClick = onItemClick
                 )
             }
         }
@@ -119,7 +122,8 @@ private fun EmptyFavoritesContent() {
 @Composable
 private fun FavoritesList(
     favorites: List<ApodEntry>,
-    onRemoveFavorite: (ApodEntry) -> Unit
+    onRemoveFavorite: (ApodEntry) -> Unit,
+    onItemClick: (ApodEntry) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -137,7 +141,8 @@ private fun FavoritesList(
         ) { apod ->
             FavoriteItem(
                 apod = apod,
-                onRemoveFavorite = { onRemoveFavorite(apod) }
+                onRemoveFavorite = { onRemoveFavorite(apod) },
+                onItemClick = { onItemClick(apod) }
             )
         }
     }
@@ -150,7 +155,8 @@ private fun FavoritesList(
 @Composable
 private fun FavoriteItem(
     apod: ApodEntry,
-    onRemoveFavorite: () -> Unit
+    onRemoveFavorite: () -> Unit,
+    onItemClick: () -> Unit
 ) {
     // Zmienna przechowująca czy dialog jest aktualnie widoczny.
     // 'remember' – Compose pamięta tę wartość między rysowaniami.
@@ -203,7 +209,10 @@ private fun FavoriteItem(
 
     // Karta zdjęcia
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable { onItemClick() },
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(
