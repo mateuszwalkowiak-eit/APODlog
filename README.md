@@ -20,9 +20,9 @@ Aplikacja została zaprojektowana z myślą o nowoczesnym UI (Jetpack Compose), 
 - **Ujednolicone UI**: Customowa ikona aplikacji (teleskop) spójna z brandingiem wewnątrz aplikacji.
 
 ## 🚧 Planowane Funkcje (Etap 2)
-- [ ] **Ekran ulubionych**: Lista zapisanych zdjęć z bazy Room z możliwością przeglądania.
-- [ ] **Nawigacja**: Przechodzenie między ekranem głównym a listą ulubionych i szczegółami (Navigation Compose).
-- [ ] **Ekran szczegółów i notatki**: Pełnoekranowy widok z opcją dodania własnej notatki użytkownika do konkretnego dnia.
+- [x] **Ekran ulubionych**: Lista zapisanych zdjęć z bazy Room z możliwością przeglądania.
+- [x] **Nawigacja**: Przechodzenie między ekranem głównym a listą ulubionych i szczegółami (Navigation Compose).
+- [x] **Ekran szczegółów i notatki**: Pełnoekranowy widok z opcją dodania własnej notatki użytkownika do konkretnego dnia.
 - [ ] **Zapis zdjęć**: Pobieranie obrazów do pamięci lokalnej urządzenia (MediaStore API).
 - [ ] **Obsługa wideo**: Poprawione wyświetlanie miniaturek i linkowanie do serwisu YouTube.
 
