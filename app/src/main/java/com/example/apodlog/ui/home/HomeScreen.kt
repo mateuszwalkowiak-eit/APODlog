@@ -20,6 +20,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Refresh
@@ -35,6 +42,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +53,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -51,6 +63,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.apodlog.data.model.ApodEntry
 import com.example.apodlog.ui.components.AppTopBar
+import com.example.apodlog.utils.ImageDownloader
+import kotlinx.coroutines.launch
+import android.widget.Toast
 
 /**
  * Główny ekran aplikacji – wyświetla dzisiejsze APOD.
@@ -154,6 +169,30 @@ private fun ApodContent(
     apod: ApodEntry,
     onToggleFavorite: () -> Unit
 ) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    var isDownloading by remember { mutableStateOf(false) }
+
+    // Launcher do zapytania o uprawnienie do zapisu (dla Androida 9 i starszych)
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            isDownloading = true
+            Toast.makeText(context, "Uprawnienie przyznane. Rozpoczynanie pobierania...", Toast.LENGTH_SHORT).show()
+            coroutineScope.launch {
+                val result = ImageDownloader.downloadImage(context, apod.url, apod.title)
+                isDownloading = false
+                result.fold(
+                    onSuccess = { msg -> Toast.makeText(context, msg, Toast.LENGTH_LONG).show() },
+                    onFailure = { err -> Toast.makeText(context, "Błąd: ${err.message}", Toast.LENGTH_LONG).show() }
+                )
+            }
+        } else {
+            Toast.makeText(context, "Nie można zapisać zdjęcia bez przyznania uprawnień zapisu", Toast.LENGTH_LONG).show()
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -178,7 +217,7 @@ private fun ApodContent(
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
 
-                // Tytuł + przycisk ulubionych
+                // Tytuł + przyciski
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -191,10 +230,56 @@ private fun ApodContent(
                         modifier = Modifier.weight(1f),
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    FavoriteButton(
-                        isFavorite = apod.isFavorite,
-                        onClick = onToggleFavorite
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Przycisk pobierania zdjęcia (tylko gdy typ mediów to obraz)
+                        if (apod.mediaType == "image") {
+                            IconButton(
+                                onClick = {
+                                    if (!isDownloading) {
+                                        // Na Androidzie 10+ (Q) nie potrzebujemy pytać o uprawnienia zapisu do galerii
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ||
+                                            ContextCompat.checkSelfPermission(
+                                                context,
+                                                Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                            ) == PackageManager.PERMISSION_GRANTED
+                                        ) {
+                                            isDownloading = true
+                                            Toast.makeText(context, "Pobieranie zdjęcia...", Toast.LENGTH_SHORT).show()
+                                            coroutineScope.launch {
+                                                val result = ImageDownloader.downloadImage(context, apod.url, apod.title)
+                                                isDownloading = false
+                                                result.fold(
+                                                    onSuccess = { msg ->
+                                                        Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                                                    },
+                                                    onFailure = { err ->
+                                                        Toast.makeText(context, "Błąd: ${err.message}", Toast.LENGTH_LONG).show()
+                                                    }
+                                                )
+                                            }
+                                        } else {
+                                            // Pytamy użytkownika o uprawnienie na starszych wersjach systemu
+                                            permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                                        }
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Download,
+                                    contentDescription = "Pobierz",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
+                        }
+                        
+                        FavoriteButton(
+                            isFavorite = apod.isFavorite,
+                            onClick = onToggleFavorite
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(4.dp))
