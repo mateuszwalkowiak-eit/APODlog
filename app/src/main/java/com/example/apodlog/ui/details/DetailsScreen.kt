@@ -6,6 +6,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -60,7 +61,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import com.example.apodlog.utils.VideoUtils
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -180,15 +183,18 @@ private fun DetailsContent(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        // --- Zdjęcie / placeholder wideo ---
+        // --- Zdjęcie / Miniatura wideo ---
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(320.dp)
         ) {
-            if (apod.mediaType == "image") {
+            val videoId = if (apod.mediaType == "video") VideoUtils.extractYoutubeVideoId(apod.url) else null
+            val thumbnailUrl = if (videoId != null) VideoUtils.getYoutubeThumbnailUrl(videoId) else null
+
+            if (apod.mediaType == "image" || thumbnailUrl != null) {
                 AsyncImage(
-                    model = apod.url,
+                    model = if (apod.mediaType == "image") apod.url else thumbnailUrl,
                     contentDescription = apod.title,
                     modifier = Modifier
                         .fillMaxSize()
@@ -325,20 +331,38 @@ private fun DetailsContent(
                     )
                 }
 
+                // Informacja dla filmów – dodajemy klikalną kartę do otwarcia filmu w przeglądarce/YouTube
                 if (apod.mediaType == "video") {
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     Card(
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.primaryContainer
                         ),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { VideoUtils.openVideoInExternalApp(context, apod.url) }
                     ) {
-                        Text(
-                            text = "📹 APOD to film. Otwórz link: ${apod.url}",
-                            modifier = Modifier.padding(12.dp),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "📹 Wpis to film wideo",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "Kliknij tutaj, aby odtworzyć w YouTube",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                textDecoration = TextDecoration.Underline
+                            )
+                        }
                     }
                 }
 

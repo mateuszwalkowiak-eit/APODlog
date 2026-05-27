@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.AlertDialog
+import com.example.apodlog.utils.VideoUtils
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -226,10 +227,13 @@ private fun FavoriteItem(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Miniaturka zdjęcia (tylko dla zdjęć, nie filmów)
-            if (apod.mediaType == "image") {
+            // Miniaturka zdjęcia lub filmu z YouTube
+            val videoId = if (apod.mediaType == "video") VideoUtils.extractYoutubeVideoId(apod.url) else null
+            val thumbnailUrl = if (videoId != null) VideoUtils.getYoutubeThumbnailUrl(videoId) else null
+
+            if (apod.mediaType == "image" || thumbnailUrl != null) {
                 AsyncImage(
-                    model = apod.url,
+                    model = if (apod.mediaType == "image") apod.url else thumbnailUrl,
                     contentDescription = apod.title,
                     modifier = Modifier
                         .size(72.dp)
@@ -237,7 +241,7 @@ private fun FavoriteItem(
                     contentScale = ContentScale.Crop
                 )
             } else {
-                // Placeholder dla filmów
+                // Placeholder dla innych filmów
                 Box(
                     modifier = Modifier
                         .size(72.dp)

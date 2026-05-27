@@ -57,7 +57,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import com.example.apodlog.utils.VideoUtils
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -198,9 +200,18 @@ private fun ApodContent(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        // --- Zdjęcie ---
+        // Ustalamy adres URL do wyświetlenia. Jeśli to obrazek - bierzemy jego URL.
+        // Jeśli to wideo - próbujemy wyciągnąć miniaturkę z serwisu YouTube.
+        val displayUrl = if (apod.mediaType == "image") {
+            apod.url
+        } else {
+            val videoId = VideoUtils.extractYoutubeVideoId(apod.url)
+            if (videoId != null) VideoUtils.getYoutubeThumbnailUrl(videoId) else null
+        }
+
+        // --- Zdjęcie / Miniatura wideo ---
         ApodImage(
-            url = if (apod.mediaType == "image") apod.url else null,
+            url = displayUrl,
             contentDescription = apod.title
         )
 
@@ -302,21 +313,38 @@ private fun ApodContent(
                     )
                 }
 
-                // Informacja dla filmów
+                // Informacja dla filmów – dodajemy klikalną kartę do otwarcia filmu w przeglądarce/YouTube
                 if (apod.mediaType == "video") {
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     Card(
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.primaryContainer
                         ),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { VideoUtils.openVideoInExternalApp(context, apod.url) }
                     ) {
-                        Text(
-                            text = "📹 Dzisiejsze APOD to film. Otwórz link: ${apod.url}",
-                            modifier = Modifier.padding(12.dp),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "📹 Dzisiejszy wpis to film wideo",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "Kliknij tutaj, aby odtworzyć w YouTube",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                textDecoration = TextDecoration.Underline
+                            )
+                        }
                     }
                 }
 

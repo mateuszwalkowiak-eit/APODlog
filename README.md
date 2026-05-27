@@ -24,7 +24,7 @@ Aplikacja została zaprojektowana z myślą o nowoczesnym UI (Jetpack Compose), 
 - [x] **Nawigacja**: Przechodzenie między ekranem głównym a listą ulubionych i szczegółami (Navigation Compose).
 - [x] **Ekran szczegółów i notatki**: Pełnoekranowy widok z opcją dodania własnej notatki użytkownika do konkretnego dnia.
 - [x] **Zapis zdjęć**: Pobieranie obrazów do pamięci lokalnej urządzenia (MediaStore API).
-- [ ] **Obsługa wideo**: Poprawione wyświetlanie miniaturek i linkowanie do serwisu YouTube.
+- [x] **Obsługa wideo**: Poprawione wyświetlanie miniaturek i linkowanie do serwisu YouTube.
 
 ---
 
