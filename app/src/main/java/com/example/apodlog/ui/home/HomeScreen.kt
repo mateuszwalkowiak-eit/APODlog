@@ -68,19 +68,30 @@ import com.example.apodlog.ui.components.AppTopBar
 import com.example.apodlog.utils.ImageDownloader
 import kotlinx.coroutines.launch
 import android.widget.Toast
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SelectableDates
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 
 /**
  * Główny ekran aplikacji – wyświetla dzisiejsze APOD.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: ApodViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showDatePicker by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
-            AppTopBar(title = "APODlog")
+            AppTopBar(
+                title = "APODlog",
+                onCalendarClick = { showDatePicker = true }
+            )
         }
     ) { innerPadding ->
         Box(
@@ -100,6 +111,47 @@ fun HomeScreen(
                     onToggleFavorite = { viewModel.toggleFavorite(state.apod) }
                 )
             }
+        }
+    }
+
+    // Wyświetlamy popup kalendarza po kliknięciu ikonki w AppTopBar
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                    // Blokujemy możliwość wyboru przyszłych dat
+                    return utcTimeMillis <= System.currentTimeMillis()
+                }
+            }
+        )
+
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDatePicker = false
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            // Konwertujemy milisekundy UTC na lokalną datę w formacie YYYY-MM-DD
+                            val localDate = java.time.Instant.ofEpochMilli(millis)
+                                .atZone(java.time.ZoneId.of("UTC"))
+                                .toLocalDate()
+                            viewModel.loadApodForDate(localDate.toString())
+                        }
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDatePicker = false }
+                ) {
+                    Text("Anuluj")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
         }
     }
 }
@@ -313,7 +365,7 @@ private fun ApodContent(
                     )
                 }
 
-                // Informacja dla filmów – dodajemy klikalną kartę do otwarcia filmu w przeglądarce/YouTube
+                // Informacja dla filmów – dodajemy klikalną kartę do otwarcia filmu w odtwarzaczu/przeglądarce
                 if (apod.mediaType == "video") {
                     Spacer(modifier = Modifier.height(12.dp))
                     Card(
@@ -332,14 +384,14 @@ private fun ApodContent(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "📹 Dzisiejszy wpis to film wideo",
+                                text = "📹 Ten wpis to film wideo",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = "Kliknij tutaj, aby odtworzyć w YouTube",
+                                text = "Kliknij, aby odtworzyć",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 textDecoration = TextDecoration.Underline

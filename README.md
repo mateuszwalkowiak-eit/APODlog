@@ -25,6 +25,7 @@ Aplikacja została zaprojektowana z myślą o nowoczesnym UI (Jetpack Compose), 
 - **Ekran szczegółów i notatki**: Pełnoekranowy widok z opcją dodania własnej notatki użytkownika do konkretnego dnia.
 - **Zapis zdjęć**: Pobieranie obrazów do pamięci lokalnej urządzenia (MediaStore API).
 - **Obsługa wideo**: Poprawione wyświetlanie miniaturek i linkowanie do serwisu YouTube.
+- **Przeglądanie zdjęć wstecz (Kalendarz)**: Możliwość wyboru dowolnej historycznej daty z wyskakującego kalendarza (**Material 3 DatePicker**) bezpośrednio na ekranie głównym. Daty z przyszłości są automatycznie zablokowane.
 
 ---
 

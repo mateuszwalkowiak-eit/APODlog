@@ -57,7 +57,7 @@ data class BottomNavItem(
 val bottomNavItems = listOf(
     BottomNavItem(
         route = Destinations.HOME,
-        label = "Dzisiaj",
+        label = "Zdjęcie dnia",
         icon = Icons.Default.Home
     ),
     BottomNavItem(

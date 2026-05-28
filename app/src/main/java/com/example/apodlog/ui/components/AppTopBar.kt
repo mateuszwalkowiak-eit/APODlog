@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,12 +30,13 @@ import com.example.apodlog.R
 
 /**
  * Kompaktowy pasek tytułowy aplikacji.
- * Obsługuje opcjonalny przycisk wstecz.
+ * Obsługuje opcjonalny przycisk wstecz oraz opcjonalny przycisk kalendarza.
  */
 @Composable
 fun AppTopBar(
     title: String,
-    onBackClick: (() -> Unit)? = null
+    onBackClick: (() -> Unit)? = null,
+    onCalendarClick: (() -> Unit)? = null
 ) {
     Surface(
         color = MaterialTheme.colorScheme.background,
@@ -78,9 +80,20 @@ fun AppTopBar(
                 text = title,
                 fontWeight = FontWeight.Bold,
                 fontSize = 19.sp,
-                color = MaterialTheme.colorScheme.onBackground
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.weight(1f)
             )
+
+            // Jeśli podano akcję kalendarza, pokazujemy przycisk wyboru daty
+            if (onCalendarClick != null) {
+                IconButton(onClick = onCalendarClick) {
+                    Icon(
+                        imageVector = Icons.Default.DateRange,
+                        contentDescription = "Wybierz datę",
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+            }
         }
     }
 }
-

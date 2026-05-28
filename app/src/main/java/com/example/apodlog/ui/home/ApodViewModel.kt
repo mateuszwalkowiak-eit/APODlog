@@ -36,6 +36,10 @@ class ApodViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow<ApodUiState>(ApodUiState.Loading)
     val uiState: StateFlow<ApodUiState> = _uiState.asStateFlow()
 
+    // Przechowuje wybraną datę przez użytkownika. Domyślnie jest to dzisiejszy dzień (format: YYYY-MM-DD).
+    private val _selectedDate = MutableStateFlow<String>(LocalDate.now().toString())
+    val selectedDate: StateFlow<String> = _selectedDate.asStateFlow()
+
     init {
         // Inicjalizacja zależności (w produkcji użylibyśmy Hilt/Koin)
         val dao = AppDatabase.getInstance(application).apodDao()
@@ -46,16 +50,25 @@ class ApodViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
-     * Ładuje dzisiejszy APOD (z cache lub sieci).
+     * Ładuje dzisiejszy APOD na start aplikacji.
      */
     private fun loadTodayApod() {
+        val today = LocalDate.now().toString()
+        loadApodForDate(today)
+    }
+
+    /**
+     * Ładuje APOD dla konkretnej wybranej daty (z bazy danych lub z internetu).
+     */
+    fun loadApodForDate(date: String) {
         viewModelScope.launch {
             _uiState.value = ApodUiState.Loading
-            val today = LocalDate.now().toString() // format: YYYY-MM-DD
-            val result = repository.fetchTodayApod(today)
+            _selectedDate.value = date // zapisujemy, którą datę teraz oglądamy
+            
+            val result = repository.fetchApodByDate(date)
             _uiState.value = result.fold(
                 onSuccess = { ApodUiState.Success(it) },
-                onFailure = { ApodUiState.Error(it.message ?: "Nieznany błąd") }
+                onFailure = { ApodUiState.Error(it.message ?: "Nie udało się pobrać zdjęcia dla wybranej daty") }
             )
         }
     }
@@ -66,15 +79,17 @@ class ApodViewModel(application: Application) : AndroidViewModel(application) {
     fun toggleFavorite(entry: ApodEntry) {
         viewModelScope.launch {
             repository.toggleFavorite(entry)
-            // Odśwież stan po zmianie
-            val today = LocalDate.now().toString()
-            val updated = repository.fetchTodayApod(today)
+            // Odświeżamy stan dla aktualnie wybranej daty, aby serduszko się od razu zaktualizowało na ekranie
+            val currentDate = _selectedDate.value
+            val updated = repository.fetchApodByDate(currentDate)
             updated.onSuccess { _uiState.value = ApodUiState.Success(it) }
         }
     }
 
     /**
-     * Ponów próbę pobrania po błędzie.
+     * Ponów próbę pobrania po błędzie. Spróbuje pobrać dane dla wybranej wcześniej daty.
      */
-    fun retry() = loadTodayApod()
+    fun retry() {
+        loadApodForDate(_selectedDate.value)
+    }
 }

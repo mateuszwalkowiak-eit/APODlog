@@ -331,7 +331,7 @@ private fun DetailsContent(
                     )
                 }
 
-                // Informacja dla filmów – dodajemy klikalną kartę do otwarcia filmu w przeglądarce/YouTube
+                // Informacja dla filmów – dodajemy klikalną kartę do otwarcia filmu w odtwarzaczu/przeglądarce
                 if (apod.mediaType == "video") {
                     Spacer(modifier = Modifier.height(12.dp))
                     Card(
@@ -350,14 +350,14 @@ private fun DetailsContent(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "📹 Wpis to film wideo",
+                                text = "📹 Ten wpis to film wideo",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = "Kliknij tutaj, aby odtworzyć w YouTube",
+                                text = "Kliknij, aby odtworzyć",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 textDecoration = TextDecoration.Underline
