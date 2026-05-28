@@ -12,19 +12,19 @@ Aplikacja została zaprojektowana z myślą o nowoczesnym UI (Jetpack Compose), 
 
 ---
 
-## 🌟 Funkcje (Obecne - Etap 1)
+## 🌟 Funkcje (Etap 1)
 - **Codzienne zdjęcia kosmosu**: Pobieranie i wyświetlanie najnowszego obrazu/filmu udostępnionego przez NASA.
 - **Wsparcie dla trybu Offline**: Aplikacja zapisuje pobrane dane w lokalnej bazie, dzięki czemu ostatnio pobrane zdjęcia można przeglądać bez dostępu do Internetu.
 - **Dodawanie do ulubionych**: Możliwość polubienia zdjęcia (animowany przycisk ❤️).
 - **Automatyczny motyw**: Interfejs automatycznie dostosowuje się do trybu (jasny/ciemny) systemu Android.
 - **Ujednolicone UI**: Customowa ikona aplikacji (teleskop) spójna z brandingiem wewnątrz aplikacji.
 
-## 🚧 Planowane Funkcje (Etap 2)
-- [x] **Ekran ulubionych**: Lista zapisanych zdjęć z bazy Room z możliwością przeglądania.
-- [x] **Nawigacja**: Przechodzenie między ekranem głównym a listą ulubionych i szczegółami (Navigation Compose).
-- [x] **Ekran szczegółów i notatki**: Pełnoekranowy widok z opcją dodania własnej notatki użytkownika do konkretnego dnia.
-- [x] **Zapis zdjęć**: Pobieranie obrazów do pamięci lokalnej urządzenia (MediaStore API).
-- [x] **Obsługa wideo**: Poprawione wyświetlanie miniaturek i linkowanie do serwisu YouTube.
+## 🌟 Funkcje (Etap 2)
+- **Ekran ulubionych**: Lista zapisanych zdjęć z bazy Room z możliwością przeglądania.
+- **Nawigacja**: Przechodzenie między ekranem głównym a listą ulubionych i szczegółami (Navigation Compose).
+- **Ekran szczegółów i notatki**: Pełnoekranowy widok z opcją dodania własnej notatki użytkownika do konkretnego dnia.
+- **Zapis zdjęć**: Pobieranie obrazów do pamięci lokalnej urządzenia (MediaStore API).
+- **Obsługa wideo**: Poprawione wyświetlanie miniaturek i linkowanie do serwisu YouTube.
 
 ---
 
