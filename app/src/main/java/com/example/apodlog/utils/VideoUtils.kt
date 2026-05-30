@@ -45,11 +45,23 @@ object VideoUtils {
 
     /**
      * Otwiera filmik w zewnętrznej przeglądarce lub w oficjalnej aplikacji YouTube.
+     * Automatycznie przekształca linki typu embed na zwykłe linki (watch), aby zapobiec błędom odtwarzania.
      */
     fun openVideoInExternalApp(context: Context, url: String) {
         try {
-            // Intent o akcji VIEW mówi systemowi: "pokaż tę stronę/zasób"
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            // Wyciągamy ID wideo z YouTube (jeśli link pochodzi z YouTube)
+            val videoId = extractYoutubeVideoId(url)
+            
+            // Jeśli to link YouTube, zamieniamy go na standardowy link do oglądania (watch)
+            val finalUrl = if (videoId != null) {
+                "https://www.youtube.com/watch?v=$videoId"
+            } else {
+                url
+            }
+
+            // Intent o akcji VIEW mówi systemowi: "pokaż ten zasób"
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(finalUrl))
+            
             // Uruchamiamy przeglądarkę lub aplikację YouTube
             context.startActivity(intent)
         } catch (e: Exception) {
