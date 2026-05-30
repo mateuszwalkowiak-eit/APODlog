@@ -8,7 +8,7 @@ Aplikacja została zaprojektowana z myślą o nowoczesnym UI (Jetpack Compose), 
 
 ## 🎬 Demo aplikacji
 
-[Prezentacja działania aplikacji](https://drive.google.com/file/d/1-5WdALv-qXnem5iOQ2cezL-sw_03yHf6/view?usp=sharing)
+[Prezentacja działania aplikacji](https://drive.google.com/file/d/1bKUc2tzpCc4cXO3nhhqV2G10qx_ZubxS/view?usp=sharing)
 
 ---
 
